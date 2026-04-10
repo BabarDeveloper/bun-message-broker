@@ -53,6 +53,8 @@ class MessageBrokerServer {
             topic: topicName,
             message: `Topic "${topicName}" created successfully`,
           });
+          
+          this.io.emit(SocketEvents.TOPICS_LIST, this.getTopicsList());
 
           socket.emit(SocketEvents.TOPIC_CREATED, {
             topic: topicName,
@@ -77,6 +79,8 @@ class MessageBrokerServer {
 
         socket.join(topicName);
         this.topics[topicName]?.subscribers.add(socket.id);
+        
+        this.io.emit(SocketEvents.TOPICS_LIST, this.getTopicsList());
 
         console.log(`📡 Socket ${socket.id} subscribed to ${topicName}`);
         console.log(
@@ -118,6 +122,8 @@ class MessageBrokerServer {
 
           this.topics[topic]?.messages.push(message);
 
+          this.io.emit(SocketEvents.TOPICS_LIST, this.getTopicsList());
+
           this.io.to(topic).emit(SocketEvents.MESSAGE, {
             type: "new_message",
             message: message,
@@ -134,14 +140,22 @@ class MessageBrokerServer {
         if (this.topics[topicName]) {
           socket.leave(topicName);
           this.topics[topicName]?.subscribers.delete(socket.id);
+          this.io.emit(SocketEvents.TOPICS_LIST, this.getTopicsList());
           console.log(`🔌 Socket ${socket.id} unsubscribed from ${topicName}`);
         }
       });
 
       socket.on("disconnect", () => {
         console.log(`❌ Client disconnected: ${socket.id}`);
+        let topicsChanged = false;
         for (const topic in this.topics) {
-          this.topics[topic]?.subscribers.delete(socket.id);
+          if (this.topics[topic]?.subscribers.has(socket.id)) {
+            this.topics[topic]?.subscribers.delete(socket.id);
+            topicsChanged = true;
+          }
+        }
+        if (topicsChanged) {
+          this.io.emit(SocketEvents.TOPICS_LIST, this.getTopicsList());
         }
       });
     });

@@ -29,6 +29,9 @@ class Subscriber {
       this.availableTopics.clear();
       topics.forEach((topic) => {
         this.availableTopics.set(topic.name, topic);
+        if (this.subscribedTopics.has(topic.name)) {
+          this.subscribedTopics.set(topic.name, topic);
+        }
       });
     });
 

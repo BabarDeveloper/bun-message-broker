@@ -30,12 +30,6 @@ class Publisher {
       topics.forEach((topic) => {
         this.existingTopics.set(topic.name, topic);
       });
-
-      if (topics.length > 0) {
-        console.log(
-          `📋 Server topics updated (${topics.length} topics available)`,
-        );
-      }
     });
 
     this.socket.on(SocketEvents.TOPIC_CREATED, (data) => {
